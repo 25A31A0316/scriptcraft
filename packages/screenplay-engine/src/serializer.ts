@@ -63,7 +63,7 @@ export function tiptapToScreenplayDocument(
 export function screenplayDocumentToTiptap(
   doc: ScreenplayDocument
 ): JSONContent {
-  const content: JSONContent[] = doc.nodes.map(node => {
+  const content: JSONContent[] = doc.nodes.map((node: ScreenplayNode) => {
     return {
       type: node.type,
       attrs: {

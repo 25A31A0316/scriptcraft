@@ -33,8 +33,11 @@ jobs:
 
       - name: Build Web Application
         run: |
-          npm run build --workspaces --if-present
-          npx vite build apps/web --outDir dist
+          npm run build --workspace=@screenplay/schema
+          npm run build --workspace=@screenplay/engine
+          npm run build --workspace=@screenplay/formatting
+          npm run build --workspace=@screenplay/import-export
+          npm run build --workspace=@screenplay/web
 
       - name: Upload Pages Artifact
         uses: actions/upload-pages-artifact@v3
