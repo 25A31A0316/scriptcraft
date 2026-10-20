@@ -1,0 +1,20 @@
+{
+  "name": "@screenplay/import-export",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "tsx --test src/**/*.test.ts"
+  },
+  "dependencies": {
+    "@screenplay/schema": "*",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "@types/uuid": "^10.0.0",
+    "typescript": "^5.7.3"
+  }
+}

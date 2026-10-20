@@ -1,0 +1,256 @@
+:root,
+[data-theme="obsidian"] {
+  --bg-app: #0c0e12;
+  --bg-sidebar: #12151c;
+  --bg-panel: #161a23;
+  --bg-page: #1a1e29;
+  --border-subtle: #242938;
+  --border-active: #3b435c;
+  --ink-primary: #f8fafc;
+  --ink-muted: #94a3b8;
+  --ink-dim: #64748b;
+  --accent-gold: #f59e0b;
+  --accent-amber: #d97706;
+  --status-green: #10b981;
+
+  /* Typography */
+  --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-script: 'Courier Prime', 'Noto Sans Telugu', 'Mandali', Courier, monospace;
+}
+
+[data-theme="classic"] {
+  --bg-app: #ece8df;
+  --bg-sidebar: #ded8cb;
+  --bg-panel: #f4efe6;
+  --bg-page: #ffffff;
+  --border-subtle: #d0c8b8;
+  --border-active: #a89f8c;
+  --ink-primary: #1e293b;
+  --ink-muted: #64748b;
+  --ink-dim: #94a3b8;
+  --accent-gold: #b45309;
+  --accent-amber: #d97706;
+  --status-green: #059669;
+}
+
+[data-theme="classic"] .screenplay-action {
+  color: #1e293b;
+}
+
+[data-theme="classic"] .screenplay-dialogue {
+  color: #0f172a;
+}
+
+[data-theme="classic"] .screenplay-character {
+  color: #0369a1;
+}
+
+[data-theme="classic"] .screenplay-scene-heading {
+  color: #92400e;
+}
+
+[data-theme="slate"] {
+  --bg-app: #090d16;
+  --bg-sidebar: #0f172a;
+  --bg-panel: #1e293b;
+  --bg-page: #151f32;
+  --border-subtle: #1e293b;
+  --border-active: #334155;
+  --ink-primary: #f8fafc;
+  --ink-muted: #94a3b8;
+  --ink-dim: #64748b;
+  --accent-gold: #38bdf8;
+  --accent-amber: #0ea5e9;
+  --status-green: #10b981;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-ui);
+  background-color: var(--bg-app);
+  color: var(--ink-primary);
+  height: 100vh;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #2a3142;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3b445c;
+}
+
+/* Screenplay Page Container */
+.screenplay-viewport {
+  background-color: var(--bg-app);
+  overflow-y: auto;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 2.5rem 1rem 6rem;
+}
+
+.screenplay-page {
+  background-color: var(--bg-page);
+  width: 850px;
+  min-height: 1100px;
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--border-subtle);
+  border-radius: 4px;
+  padding: 4.5rem 4rem; /* Hollywood Standard margins: ~1.5" left, ~1.0" right/top/bottom */
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+/* Screenplay ProseMirror / TipTap Editor Root */
+.ProseMirror {
+  outline: none;
+  font-family: var(--font-script);
+  font-size: 15px; /* 12pt visual equivalent */
+  line-height: 1.15;
+  color: #e2e8f0;
+  white-space: pre-wrap;
+}
+
+.ProseMirror p {
+  margin: 0;
+}
+
+/* Screenplay Elements Indentation & Margins */
+.screenplay-node {
+  position: relative;
+  min-height: 1.25em;
+  word-break: break-word;
+}
+
+/* SCENE HEADING (SLUGLINE) */
+.screenplay-scene-heading {
+  text-transform: uppercase;
+  font-weight: 700;
+  color: #fbbf24;
+  margin-top: 2em;
+  margin-bottom: 0.8em;
+  letter-spacing: 0.03em;
+}
+.screenplay-scene-heading:first-child {
+  margin-top: 0;
+}
+
+/* ACTION */
+.screenplay-action {
+  margin-top: 0.8em;
+  margin-bottom: 0.2em;
+  color: #f1f5f9;
+  max-width: 60ch;
+}
+
+/* CHARACTER */
+.screenplay-character {
+  text-transform: uppercase;
+  font-weight: 600;
+  color: #38bdf8;
+  margin-top: 1em;
+  margin-bottom: 0.1em;
+  margin-left: 37%; /* Standard ~3.7 inches from left edge */
+  max-width: 38ch;
+}
+
+/* PARENTHETICAL */
+.screenplay-parenthetical {
+  color: #cbd5e1;
+  margin-top: 0.1em;
+  margin-bottom: 0.1em;
+  margin-left: 28%; /* Standard ~3.1 inches from left edge */
+  max-width: 25ch;
+}
+
+/* DIALOGUE */
+.screenplay-dialogue {
+  color: #ffffff;
+  margin-top: 0.1em;
+  margin-bottom: 0.9em;
+  margin-left: 18%; /* Standard ~2.5 inches from left edge */
+  max-width: 42ch;
+}
+
+/* TRANSITION */
+.screenplay-transition {
+  text-transform: uppercase;
+  font-weight: 600;
+  color: #a78bfa;
+  margin-top: 1.2em;
+  margin-bottom: 1em;
+  text-align: right;
+  padding-right: 2rem;
+}
+
+/* SHOT */
+.screenplay-shot {
+  text-transform: uppercase;
+  font-weight: 700;
+  color: #f472b6;
+  margin-top: 1.2em;
+  margin-bottom: 0.5em;
+}
+
+/* Empty Node Placeholder Visual Hint */
+.screenplay-node:empty::before {
+  content: attr(data-placeholder);
+  color: #475569;
+  pointer-events: none;
+}
+
+/* Focus Indicator on active screenplay element */
+.screenplay-node:focus-within {
+  border-left: 2px solid var(--accent-gold);
+  padding-left: 6px;
+  margin-left: -8px;
+}
+
+/* DUAL DIALOGUE (HOLLYWOOD TWO-COLUMN SIMULTANEOUS SPEECH) */
+.screenplay-dual-dialogue-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.5rem;
+  margin-top: 1.2em;
+  margin-bottom: 1.2em;
+  width: 100%;
+}
+
+.screenplay-dual-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.screenplay-dual-column .screenplay-character {
+  margin-left: 0;
+  text-align: center;
+  max-width: 100%;
+}
+
+.screenplay-dual-column .screenplay-parenthetical {
+  margin-left: 0;
+  text-align: center;
+  max-width: 100%;
+}
+
+.screenplay-dual-column .screenplay-dialogue {
+  margin-left: 0;
+  text-align: left;
+  max-width: 100%;
+}
+
