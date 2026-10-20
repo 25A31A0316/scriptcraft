@@ -4,6 +4,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ScriptCraft — Professional Screenplay Platform</title>
+    <meta
+      name="description"
+      content="ScriptCraft — Professional Screenwriting & Film Production Software with industry-standard screenplay formatting, real-time pagination, IndexedDB persistence, Beat Boards, and Production Breakdowns."
+    />
+    <meta name="keywords" content="screenwriting, screenplay, script writing, filmmaking, film production, scriptcraft, beat board, script breakdown" />
+    <meta property="og:title" content="ScriptCraft — Professional Screenplay Platform" />
+    <meta property="og:description" content="Hollywood-standard screenwriting software for writers and production teams." />
+    <meta property="og:type" content="website" />
     <!-- Google Fonts: Courier Prime, Inter, and Telugu fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -13,7 +21,19 @@
     />
   </head>
   <body class="bg-surface text-ink">
-    <div id="root"></div>
+    <div id="root">
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background-color:#0c0e12;color:#f8fafc;font-family:'Inter',sans-serif;text-align:center;padding:2rem;">
+        <h1 style="font-size:1.75rem;font-weight:700;letter-spacing:0.05em;color:#f59e0b;margin-bottom:0.75rem;">SCRIPTCRAFT</h1>
+        <p style="color:#94a3b8;font-size:0.95rem;max-width:500px;margin-bottom:1.5rem;">Professional Screenwriting and Film Production Software</p>
+        <div style="font-size:0.85rem;color:#64748b;">Loading workspace...</div>
+      </div>
+    </div>
+    <noscript>
+      <div style="padding:2rem;text-align:center;color:#fff;background:#111;">
+        <h2>JavaScript Required</h2>
+        <p>Please enable JavaScript to use ScriptCraft Screenplay Editor.</p>
+      </div>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
