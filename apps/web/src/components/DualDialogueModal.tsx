@@ -17,7 +17,7 @@ interface DualDialogueModalProps {
 }
 
 export const DualDialogueModal: React.FC<DualDialogueModalProps> = ({
-  document,
+  document: _document,
   isOpen,
   onClose,
   onInsertDualDialogue,

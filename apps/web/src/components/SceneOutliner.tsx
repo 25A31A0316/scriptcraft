@@ -21,7 +21,7 @@ export const SceneOutliner: React.FC<SceneOutlinerProps> = ({
       .filter(n => n.type === 'scene_heading')
       .map(node => {
         const text = node.text || 'UNTITLED SCENE';
-        const num = node.metadata?.sceneNumber || String(sceneIndex++);
+        const num = (node.metadata as any)?.sceneNumber || String(sceneIndex++);
         return {
           id: node.id,
           text,

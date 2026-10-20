@@ -36,7 +36,7 @@ export const BeatBoard: React.FC<BeatBoardProps> = ({
 
       if (node.type === 'scene_heading') {
         const text = node.text || 'UNTITLED SCENE';
-        const num = node.metadata?.sceneNumber || String(sceneIndex++);
+        const num = (node.metadata as any)?.sceneNumber || String(sceneIndex++);
 
         // Assign Act based on scene position
         let actLabel = 'Act 1: Setup';

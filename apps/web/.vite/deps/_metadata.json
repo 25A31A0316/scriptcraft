@@ -1,0 +1,85 @@
+{
+  "hash": "e28fca32",
+  "configHash": "3c4f5805",
+  "lockfileHash": "5f4e6638",
+  "browserHash": "a7f90532",
+  "optimized": {
+    "react/jsx-dev-runtime": {
+      "src": "../../../../node_modules/react/jsx-dev-runtime.js",
+      "file": "react_jsx-dev-runtime.js",
+      "fileHash": "158687d3",
+      "needsInterop": true
+    },
+    "react": {
+      "src": "../../../../node_modules/react/index.js",
+      "file": "react.js",
+      "fileHash": "8470ebf6",
+      "needsInterop": true
+    },
+    "react-dom/client": {
+      "src": "../../../../node_modules/react-dom/client.js",
+      "file": "react-dom_client.js",
+      "fileHash": "b066a287",
+      "needsInterop": true
+    },
+    "uuid": {
+      "src": "../../../../node_modules/uuid/dist/esm-browser/index.js",
+      "file": "uuid.js",
+      "fileHash": "b889578f",
+      "needsInterop": false
+    },
+    "lucide-react": {
+      "src": "../../../../node_modules/lucide-react/dist/esm/lucide-react.mjs",
+      "file": "lucide-react.js",
+      "fileHash": "14809dd8",
+      "needsInterop": false
+    },
+    "@tiptap/react": {
+      "src": "../../../../node_modules/@tiptap/react/dist/index.js",
+      "file": "@tiptap_react.js",
+      "fileHash": "01771457",
+      "needsInterop": false
+    },
+    "@tiptap/extension-text": {
+      "src": "../../../../node_modules/@tiptap/extension-text/dist/index.js",
+      "file": "@tiptap_extension-text.js",
+      "fileHash": "e1622af7",
+      "needsInterop": false
+    },
+    "@tiptap/extension-history": {
+      "src": "../../../../node_modules/@tiptap/extension-history/dist/index.js",
+      "file": "@tiptap_extension-history.js",
+      "fileHash": "3769a8c4",
+      "needsInterop": false
+    },
+    "@tiptap/core": {
+      "src": "../../../../node_modules/@tiptap/core/dist/index.js",
+      "file": "@tiptap_core.js",
+      "fileHash": "097a7382",
+      "needsInterop": false
+    },
+    "@tiptap/pm/state": {
+      "src": "../../../../node_modules/@tiptap/pm/state/dist/index.js",
+      "file": "@tiptap_pm_state.js",
+      "fileHash": "b9f42dce",
+      "needsInterop": false
+    }
+  },
+  "chunks": {
+    "chunk-Q5GKOTWG": {
+      "file": "chunk-Q5GKOTWG.js"
+    },
+    "chunk-QYHAQSPB": {
+      "file": "chunk-QYHAQSPB.js"
+    },
+    "chunk-R4KAEBSE": {
+      "file": "chunk-R4KAEBSE.js"
+    },
+    "chunk-ITFAP3QO": {
+      "file": "chunk-ITFAP3QO.js"
+    },
+    "chunk-G3PMV62Z": {
+      "file": "chunk-G3PMV62Z.js"
+    }
+  }
+}

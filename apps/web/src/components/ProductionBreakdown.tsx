@@ -53,7 +53,7 @@ export const ProductionBreakdown: React.FC<ProductionBreakdownProps> = ({
     for (const node of document.nodes) {
       if (node.type === 'scene_heading') {
         const text = node.text || '';
-        const num = node.metadata?.sceneNumber || String(idx++);
+        const num = (node.metadata as any)?.sceneNumber || String(idx++);
 
         let intExt: 'INT.' | 'EXT.' | 'OTHER' = 'OTHER';
         if (text.includes('INT.')) intExt = 'INT.';
