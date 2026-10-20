@@ -1,5 +1,11 @@
-import { useState, useEffect } from 'react';
-import { ScreenplayDocument, ScreenplayElementType, ScreenplayNode } from '@screenplay/schema';
+import { useState, useEffect, useCallback } from 'react';
+import {
+  ScreenplayDocument,
+  ScreenplayElementType,
+  ScreenplayNode,
+  validateScreenplayDocument,
+  sanitizeScreenplayDocument,
+} from '@screenplay/schema';
 import { useScreenplayPersistence } from './hooks/useScreenplayPersistence';
 import { useCollaborationSync } from './hooks/useCollaborationSync';
 import { ScriptTopBar } from './components/ScriptTopBar';
@@ -17,6 +23,7 @@ import { TableReadModal } from './components/TableReadModal';
 import { TitlePageModal } from './components/TitlePageModal';
 import { DualDialogueModal } from './components/DualDialogueModal';
 import { DirectorCommentsModal } from './components/DirectorCommentsModal';
+import { DocumentLibraryModal } from './components/DocumentLibraryModal';
 import { ScriptStatusBar } from './components/ScriptStatusBar';
 import {
   generateFountain,
@@ -111,12 +118,20 @@ export default function App() {
     persistDocument,
     saveStatus,
     lastSavedAt,
+    switchDocument,
+    createNewDocument,
+    duplicateCurrentDocument,
   } = useScreenplayPersistence(INITIAL_SCREENPLAY);
 
   const [activeElement, setActiveElement] = useState<ScreenplayElementType>('action');
   const [outlineOpen, setOutlineOpen] = useState(true);
   const [characterOpen, setCharacterOpen] = useState(true);
   const [viewMode, setViewMode] = useState<'editor' | 'beatboard' | 'breakdown'>('editor');
+  const [spellcheckEnabled, setSpellcheckEnabled] = useState(true);
+  const [distractionFree, setDistractionFree] = useState(false);
+
+  // Modals state
+  const [libraryModalOpen, setLibraryModalOpen] = useState(false);
   const [revisionModalOpen, setRevisionModalOpen] = useState(false);
   const [reportsModalOpen, setReportsModalOpen] = useState(false);
   const [continuityModalOpen, setContinuityModalOpen] = useState(false);
@@ -133,24 +148,41 @@ export default function App() {
     window.document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
-  // Cloud & Real-time Collaboration Sync
-  const { connectionStatus, peers, saveCloudSnapshot } = useCollaborationSync(
-    document.id,
-    'Prasanth (Director)'
+  // Handle remote updates from collaboration peers
+  const handleRemoteDocumentUpdate = useCallback(
+    (remoteDoc: ScreenplayDocument) => {
+      persistDocument(remoteDoc);
+    },
+    [persistDocument]
   );
+
+  // Cloud & Real-time Collaboration Sync
+  const {
+    connectionStatus,
+    peers,
+    broadcastCursor,
+    broadcastDocumentUpdate,
+    saveCloudSnapshot,
+  } = useCollaborationSync(document.id, 'Prasanth (Director)', handleRemoteDocumentUpdate);
 
   const handleDocumentChange = (updatedDoc: ScreenplayDocument) => {
     persistDocument(updatedDoc);
+    broadcastDocumentUpdate(updatedDoc);
     saveCloudSnapshot(updatedDoc);
   };
 
+  // Cursor-aware insertion for Dual Dialogue
   const handleInsertDualDialogue = (newNodes: ScreenplayNode[]) => {
-    const updatedNodes = [...document.nodes, ...newNodes];
-    handleDocumentChange({
-      ...document,
-      nodes: updatedNodes,
-      updatedAt: new Date().toISOString(),
-    });
+    window.dispatchEvent(
+      new CustomEvent('insert-screenplay-nodes', { detail: { nodes: newNodes } })
+    );
+  };
+
+  // Cursor-aware insertion for Assistant suggestions
+  const handleInsertNodeFromAssistant = (newNode: ScreenplayNode) => {
+    window.dispatchEvent(
+      new CustomEvent('insert-screenplay-nodes', { detail: { nodes: [newNode] } })
+    );
   };
 
   const handleOpenTagScene = (sceneId: string) => {
@@ -159,7 +191,7 @@ export default function App() {
   };
 
   const handleUpdateSceneMetadata = (sceneId: string, elements: ProductionElements) => {
-    const updatedNodes = document.nodes.map(n => {
+    const updatedNodes = document.nodes.map((n) => {
       if (n.id === sceneId) {
         return {
           ...n,
@@ -178,15 +210,6 @@ export default function App() {
     });
   };
 
-  const handleInsertNodeFromAssistant = (newNode: ScreenplayNode) => {
-    const updatedNodes = [...document.nodes, newNode];
-    handleDocumentChange({
-      ...document,
-      nodes: updatedNodes,
-      updatedAt: new Date().toISOString(),
-    });
-  };
-
   const handleSelectSceneFromBoard = (sceneId: string) => {
     setViewMode('editor');
     setTimeout(() => {
@@ -195,7 +218,7 @@ export default function App() {
   };
 
   const handleTitleChange = (newTitle: string) => {
-    persistDocument({
+    handleDocumentChange({
       ...document,
       title: newTitle,
       titlePage: {
@@ -232,7 +255,13 @@ export default function App() {
       if (ext === 'fdx' || text.includes('<FinalDraft')) {
         imported = parseFinalDraftXml(text);
       } else if (ext === 'json') {
-        imported = JSON.parse(text) as ScreenplayDocument;
+        const parsed = JSON.parse(text);
+        const validation = validateScreenplayDocument(parsed);
+        if (!validation.valid) {
+          alert('Import Rejected — Invalid Screenplay JSON Schema:\n• ' + validation.errors.join('\n• '));
+          return;
+        }
+        imported = sanitizeScreenplayDocument(parsed as ScreenplayDocument);
       } else {
         // Default to Fountain format
         imported = parseFountain(text);
@@ -242,7 +271,7 @@ export default function App() {
         imported.title = file.name.replace(/\.[^/.]+$/, '');
       }
 
-      persistDocument(imported);
+      handleDocumentChange(imported);
     } catch (err) {
       console.error('Import failed:', err);
       alert('Failed to parse script file: ' + (err instanceof Error ? err.message : String(err)));
@@ -262,7 +291,7 @@ export default function App() {
         overflow: 'hidden',
       }}
     >
-      {/* Top Application Bar */}
+      {/* Top Application Bar (hidden during printing automatically via CSS) */}
       <ScriptTopBar
         document={document}
         saveStatus={saveStatus}
@@ -271,6 +300,11 @@ export default function App() {
         peerCount={peers.length}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
+        onOpenLibrary={() => setLibraryModalOpen(true)}
+        spellcheckEnabled={spellcheckEnabled}
+        onToggleSpellcheck={() => setSpellcheckEnabled(!spellcheckEnabled)}
+        distractionFree={distractionFree}
+        onToggleDistractionFree={() => setDistractionFree(!distractionFree)}
         onOpenRevisions={() => setRevisionModalOpen(true)}
         onOpenReports={() => setReportsModalOpen(true)}
         onOpenContinuity={() => setContinuityModalOpen(true)}
@@ -282,9 +316,9 @@ export default function App() {
         theme={theme}
         onThemeChange={setTheme}
         onTitleChange={handleTitleChange}
-        outlineOpen={outlineOpen}
+        outlineOpen={outlineOpen && !distractionFree}
         onToggleOutline={() => setOutlineOpen(!outlineOpen)}
-        characterOpen={characterOpen}
+        characterOpen={characterOpen && !distractionFree}
         onToggleCharacter={() => setCharacterOpen(!characterOpen)}
         onExportFountain={handleExportFountain}
         onExportFDX={handleExportFDX}
@@ -296,27 +330,33 @@ export default function App() {
       {/* Main Studio Workspace */}
       {viewMode === 'editor' ? (
         <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-          {/* Left: Scene Outline Rail */}
-          <SceneOutliner
-            document={document}
-            isOpen={outlineOpen}
-            onToggle={() => setOutlineOpen(!outlineOpen)}
-          />
+          {/* Left: Scene Outline Rail (Hidden in Distraction-Free Mode) */}
+          {!distractionFree && (
+            <SceneOutliner
+              document={document}
+              isOpen={outlineOpen}
+              onToggle={() => setOutlineOpen(!outlineOpen)}
+            />
+          )}
 
           {/* Center: The Writing Surface */}
           <main style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
             <ScreenplayEditor
               initialDocument={document}
+              spellcheckEnabled={spellcheckEnabled}
               onDocumentChange={handleDocumentChange}
               onActiveElementChange={setActiveElement}
+              onCursorChange={broadcastCursor}
             />
           </main>
 
-          {/* Right: Cast & Dialogue Stats Rail */}
-          <CharacterTracker
-            document={document}
-            isOpen={characterOpen}
-          />
+          {/* Right: Cast & Dialogue Stats Rail (Hidden in Distraction-Free Mode) */}
+          {!distractionFree && (
+            <CharacterTracker
+              document={document}
+              isOpen={characterOpen}
+            />
+          )}
         </div>
       ) : viewMode === 'beatboard' ? (
         <BeatBoard
@@ -332,9 +372,27 @@ export default function App() {
       )}
 
       {/* Bottom Status Bar */}
-      <ScriptStatusBar
-        document={document}
-        activeElement={activeElement}
+      {!distractionFree && (
+        <ScriptStatusBar
+          document={document}
+          activeElement={activeElement}
+        />
+      )}
+
+      {/* Document Library Modal */}
+      <DocumentLibraryModal
+        isOpen={libraryModalOpen}
+        activeDocId={document.id}
+        onClose={() => setLibraryModalOpen(false)}
+        onOpenDocument={async (id) => {
+          await switchDocument(id);
+        }}
+        onCreateNew={async () => {
+          await createNewDocument('New Screenplay');
+        }}
+        onDuplicate={async () => {
+          await duplicateCurrentDocument();
+        }}
       />
 
       {/* Production Revisions Modal */}

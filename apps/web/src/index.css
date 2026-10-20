@@ -254,3 +254,77 @@ body {
   max-width: 100%;
 }
 
+/* Print and PDF Generation Styles */
+@page {
+  size: letter;
+  margin: 1in 1in 1in 1.5in; /* Hollywood standard: 1.5in left for binding */
+}
+
+@media print {
+  body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Hide UI elements during print */
+  header,
+  aside,
+  footer,
+  .screenplay-sidebar,
+  .script-topbar,
+  .script-statusbar,
+  button,
+  .modal-backdrop,
+  [role="dialog"] {
+    display: none !important;
+  }
+
+  .screenplay-viewport {
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    background: transparent !important;
+  }
+
+  .screenplay-page {
+    width: 100% !important;
+    min-height: auto !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    background: transparent !important;
+    page-break-after: always;
+    break-after: page;
+  }
+
+  .ProseMirror {
+    color: #000000 !important;
+    font-size: 12pt !important;
+    line-height: 1.15 !important;
+  }
+
+  .screenplay-scene-heading,
+  .screenplay-action,
+  .screenplay-character,
+  .screenplay-parenthetical,
+  .screenplay-dialogue,
+  .screenplay-transition,
+  .screenplay-shot {
+    color: #000000 !important;
+  }
+
+  .screenplay-character,
+  .screenplay-parenthetical,
+  .screenplay-dialogue {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .screenplay-scene-heading {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+}
+

@@ -1,6 +1,6 @@
 import React from 'react';
 import { ScreenplayDocument } from '@screenplay/schema';
-import { SaveStatus } from '../hooks/useScreenplayPersistence';
+import { LocalSaveStatus } from '../hooks/useScreenplayPersistence';
 import {
   Clapperboard,
   CheckCircle2,
@@ -15,7 +15,10 @@ import {
   Users,
   LayoutGrid,
   FileSpreadsheet,
-  Palette,
+  FolderOpen,
+  SpellCheck,
+  Maximize2,
+  Minimize2,
   BarChart3,
   ShieldAlert,
   Sparkles,
@@ -24,16 +27,22 @@ import {
   MessageSquare,
   Sun,
   Moon,
+  AlertTriangle,
 } from 'lucide-react';
 
 interface ScriptTopBarProps {
   document: ScreenplayDocument;
-  saveStatus: SaveStatus;
+  saveStatus: LocalSaveStatus;
   lastSavedAt: Date;
-  cloudStatus?: 'connected' | 'connecting' | 'disconnected';
+  cloudStatus?: 'connected' | 'connecting' | 'disconnected' | 'offline';
   peerCount?: number;
   viewMode: 'editor' | 'beatboard' | 'breakdown';
   onViewModeChange: (mode: 'editor' | 'beatboard' | 'breakdown') => void;
+  onOpenLibrary: () => void;
+  spellcheckEnabled: boolean;
+  onToggleSpellcheck: () => void;
+  distractionFree: boolean;
+  onToggleDistractionFree: () => void;
   onOpenRevisions: () => void;
   onOpenReports: () => void;
   onOpenContinuity: () => void;
@@ -60,10 +69,15 @@ export const ScriptTopBar: React.FC<ScriptTopBarProps> = ({
   document,
   saveStatus,
   lastSavedAt,
-  cloudStatus = 'connected',
+  cloudStatus = 'offline',
   peerCount = 0,
   viewMode,
   onViewModeChange,
+  onOpenLibrary,
+  spellcheckEnabled,
+  onToggleSpellcheck,
+  distractionFree,
+  onToggleDistractionFree,
   onOpenRevisions,
   onOpenReports,
   onOpenContinuity,
@@ -97,6 +111,7 @@ export const ScriptTopBar: React.FC<ScriptTopBarProps> = ({
 
   return (
     <header
+      className="script-topbar"
       style={{
         height: '56px',
         backgroundColor: 'var(--bg-sidebar)',
@@ -115,8 +130,9 @@ export const ScriptTopBar: React.FC<ScriptTopBarProps> = ({
         style={{ display: 'none' }}
         onChange={handleFileChange}
       />
-      {/* Left: Branding & Outline toggle */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+
+      {/* Left: Branding, Library & Outline toggle */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
         <button
           onClick={onToggleOutline}
           title="Toggle Scene Outline"
@@ -134,7 +150,7 @@ export const ScriptTopBar: React.FC<ScriptTopBarProps> = ({
           <PanelLeft size={16} />
         </button>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <div
             style={{
               backgroundColor: 'var(--accent-amber)',
@@ -152,12 +168,35 @@ export const ScriptTopBar: React.FC<ScriptTopBarProps> = ({
           </span>
         </div>
 
+        {/* Script Library Button */}
+        <button
+          onClick={onOpenLibrary}
+          title="Screenplay Library (Manage, Open, Create Scripts)"
+          id="btn-open-library"
+          style={{
+            backgroundColor: 'var(--bg-panel)',
+            border: '1px solid var(--border-subtle)',
+            borderRadius: '6px',
+            padding: '5px 9px',
+            color: 'var(--accent-gold)',
+            fontSize: '12px',
+            fontWeight: 500,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '5px',
+          }}
+        >
+          <FolderOpen size={13} />
+          <span>Library</span>
+        </button>
+
         {/* Script Title (Editable) */}
-        <div style={{ marginLeft: '0.25rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <div style={{ marginLeft: '0.2rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
           <input
             type="text"
             value={document.title}
-            onChange={e => onTitleChange(e.target.value)}
+            onChange={(e) => onTitleChange(e.target.value)}
             style={{
               backgroundColor: 'transparent',
               border: '1px solid transparent',
@@ -167,10 +206,11 @@ export const ScriptTopBar: React.FC<ScriptTopBarProps> = ({
               fontSize: '13px',
               fontWeight: 600,
               outline: 'none',
-              maxWidth: '180px',
+              maxWidth: '160px',
             }}
-            onFocus={e => (e.target.style.border = '1px solid var(--border-active)')}
-            onBlur={e => (e.target.style.border = '1px solid transparent')}
+            onFocus={(e) => (e.target.style.border = '1px solid var(--border-active)')}
+            onBlur={(e) => (e.target.style.border = '1px solid transparent')}
+            title="Edit Screenplay Title"
           />
         </div>
       </div>
@@ -248,27 +288,41 @@ export const ScriptTopBar: React.FC<ScriptTopBarProps> = ({
         </button>
       </div>
 
-      {/* Center: Save / Sync Status & Collaboration Badge */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      {/* Center Right: Save / Sync Status & Collaboration Badge */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         {saveStatus === 'saving' ? (
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
+              gap: '5px',
               fontSize: '11px',
               color: 'var(--accent-gold)',
             }}
           >
             <Clock size={12} className="animate-spin" />
-            <span>Saving locally...</span>
+            <span>Saving...</span>
+          </div>
+        ) : saveStatus === 'error' ? (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+              fontSize: '11px',
+              color: '#ef4444',
+            }}
+            title="Local write failed. Storage might be full."
+          >
+            <AlertTriangle size={12} />
+            <span>Save error</span>
           </div>
         ) : (
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
+              gap: '5px',
               fontSize: '11px',
               color: 'var(--status-green)',
             }}
@@ -285,22 +339,40 @@ export const ScriptTopBar: React.FC<ScriptTopBarProps> = ({
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '6px',
+            gap: '5px',
             fontSize: '11px',
             backgroundColor: 'var(--bg-panel)',
             padding: '3px 8px',
             borderRadius: '12px',
             border: '1px solid var(--border-subtle)',
-            color: cloudStatus === 'connected' ? '#38bdf8' : 'var(--ink-dim)',
+            color:
+              cloudStatus === 'connected'
+                ? '#38bdf8'
+                : cloudStatus === 'connecting'
+                ? '#f59e0b'
+                : 'var(--ink-dim)',
           }}
+          title={
+            cloudStatus === 'connected'
+              ? 'Real-time collaboration active'
+              : cloudStatus === 'connecting'
+              ? 'Connecting to collaboration server...'
+              : 'Working in safe local offline mode'
+          }
         >
           <Wifi size={12} />
-          <span>{cloudStatus === 'connected' ? 'Cloud Synced' : 'Offline'}</span>
+          <span>
+            {cloudStatus === 'connected'
+              ? 'Connected'
+              : cloudStatus === 'connecting'
+              ? 'Connecting...'
+              : 'Local (Offline)'}
+          </span>
           {peerCount > 0 && (
             <span
               style={{
                 marginLeft: '4px',
-                paddingLeft: '6px',
+                paddingLeft: '5px',
                 borderLeft: '1px solid var(--border-subtle)',
                 color: 'var(--accent-gold)',
                 display: 'flex',
@@ -309,14 +381,58 @@ export const ScriptTopBar: React.FC<ScriptTopBarProps> = ({
               }}
             >
               <Users size={11} />
-              {peerCount} online
+              {peerCount}
             </span>
           )}
         </div>
       </div>
 
-      {/* Right: Revision, Reports, Import, Export triggers & Sidebars */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+      {/* Right: Tools, Revisions, Theme, Import/Export & Sidebars */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+        {/* Spellcheck Toggle */}
+        <button
+          onClick={onToggleSpellcheck}
+          title={`Spellcheck: ${spellcheckEnabled ? 'ON' : 'OFF'} (Click to toggle)`}
+          id="btn-toggle-spellcheck"
+          style={{
+            backgroundColor: spellcheckEnabled ? 'rgba(56, 189, 248, 0.15)' : 'var(--bg-panel)',
+            border: '1px solid var(--border-subtle)',
+            borderRadius: '6px',
+            padding: '5px 8px',
+            color: spellcheckEnabled ? '#38bdf8' : 'var(--ink-muted)',
+            fontSize: '11px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+          }}
+        >
+          <SpellCheck size={13} />
+          <span>Spell</span>
+        </button>
+
+        {/* Distraction Free Mode */}
+        <button
+          onClick={onToggleDistractionFree}
+          title={distractionFree ? 'Exit Distraction-Free Mode' : 'Enter Distraction-Free Mode'}
+          id="btn-toggle-distraction-free"
+          style={{
+            backgroundColor: distractionFree ? 'rgba(245, 158, 11, 0.15)' : 'var(--bg-panel)',
+            border: '1px solid var(--border-subtle)',
+            borderRadius: '6px',
+            padding: '5px 8px',
+            color: distractionFree ? 'var(--accent-gold)' : 'var(--ink-muted)',
+            fontSize: '11px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+          }}
+        >
+          {distractionFree ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
+          <span>Focus</span>
+        </button>
+
         {/* Revisions Draft Button */}
         <button
           onClick={onOpenRevisions}
@@ -325,19 +441,19 @@ export const ScriptTopBar: React.FC<ScriptTopBarProps> = ({
             backgroundColor: 'var(--bg-panel)',
             border: '1px solid var(--border-subtle)',
             borderRadius: '6px',
-            padding: '6px 10px',
+            padding: '5px 8px',
             color: 'var(--ink-primary)',
-            fontSize: '12px',
+            fontSize: '11px',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            gap: '6px',
+            gap: '5px',
           }}
         >
           <div
             style={{
-              width: '8px',
-              height: '8px',
+              width: '7px',
+              height: '7px',
               borderRadius: '50%',
               backgroundColor:
                 document.revision?.currentColor === 'blue'
@@ -352,7 +468,7 @@ export const ScriptTopBar: React.FC<ScriptTopBarProps> = ({
             }}
           />
           <span style={{ textTransform: 'capitalize' }}>
-            {document.revision?.currentColor || 'White'} Draft
+            {document.revision?.currentColor || 'White'}
           </span>
         </button>
 
@@ -364,16 +480,16 @@ export const ScriptTopBar: React.FC<ScriptTopBarProps> = ({
             backgroundColor: 'var(--bg-panel)',
             border: '1px solid var(--border-subtle)',
             borderRadius: '6px',
-            padding: '6px 10px',
+            padding: '5px 8px',
             color: 'var(--ink-primary)',
-            fontSize: '12px',
+            fontSize: '11px',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            gap: '6px',
+            gap: '4px',
           }}
         >
-          <BarChart3 size={14} color="var(--accent-gold)" />
+          <BarChart3 size={13} color="var(--accent-gold)" />
           <span>Reports</span>
         </button>
 
@@ -385,16 +501,16 @@ export const ScriptTopBar: React.FC<ScriptTopBarProps> = ({
             backgroundColor: 'var(--bg-panel)',
             border: '1px solid var(--border-subtle)',
             borderRadius: '6px',
-            padding: '6px 10px',
+            padding: '5px 8px',
             color: 'var(--ink-primary)',
-            fontSize: '12px',
+            fontSize: '11px',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            gap: '6px',
+            gap: '4px',
           }}
         >
-          <ShieldAlert size={14} color="#f59e0b" />
+          <ShieldAlert size={13} color="#f59e0b" />
           <span>Continuity</span>
         </button>
 
@@ -406,18 +522,18 @@ export const ScriptTopBar: React.FC<ScriptTopBarProps> = ({
             backgroundColor: 'rgba(217, 119, 6, 0.15)',
             border: '1px solid rgba(217, 119, 6, 0.3)',
             borderRadius: '6px',
-            padding: '6px 10px',
+            padding: '5px 8px',
             color: 'var(--accent-gold)',
-            fontSize: '12px',
+            fontSize: '11px',
             fontWeight: 600,
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            gap: '6px',
+            gap: '4px',
           }}
         >
-          <Sparkles size={14} />
-          <span>AI Assist</span>
+          <Sparkles size={13} />
+          <span>AI</span>
         </button>
 
         {/* Table Read & Teleprompter Button */}
@@ -428,16 +544,16 @@ export const ScriptTopBar: React.FC<ScriptTopBarProps> = ({
             backgroundColor: 'var(--bg-panel)',
             border: '1px solid var(--border-subtle)',
             borderRadius: '6px',
-            padding: '6px 10px',
+            padding: '5px 8px',
             color: '#38bdf8',
-            fontSize: '12px',
+            fontSize: '11px',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            gap: '6px',
+            gap: '4px',
           }}
         >
-          <Volume2 size={14} />
+          <Volume2 size={13} />
           <span>Rehearse</span>
         </button>
 
@@ -449,16 +565,16 @@ export const ScriptTopBar: React.FC<ScriptTopBarProps> = ({
             backgroundColor: 'var(--bg-panel)',
             border: '1px solid var(--border-subtle)',
             borderRadius: '6px',
-            padding: '6px 10px',
+            padding: '5px 8px',
             color: 'var(--ink-primary)',
-            fontSize: '12px',
+            fontSize: '11px',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            gap: '6px',
+            gap: '4px',
           }}
         >
-          <FileText size={14} color="var(--accent-gold)" />
+          <FileText size={13} color="var(--accent-gold)" />
           <span>Cover</span>
         </button>
 
@@ -470,16 +586,16 @@ export const ScriptTopBar: React.FC<ScriptTopBarProps> = ({
             backgroundColor: 'var(--bg-panel)',
             border: '1px solid var(--border-subtle)',
             borderRadius: '6px',
-            padding: '6px 10px',
+            padding: '5px 8px',
             color: '#34d399',
-            fontSize: '12px',
+            fontSize: '11px',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            gap: '6px',
+            gap: '4px',
           }}
         >
-          <Columns2 size={14} />
+          <Columns2 size={13} />
           <span>Dual</span>
         </button>
 
@@ -491,40 +607,40 @@ export const ScriptTopBar: React.FC<ScriptTopBarProps> = ({
             backgroundColor: 'var(--bg-panel)',
             border: '1px solid var(--border-subtle)',
             borderRadius: '6px',
-            padding: '6px 10px',
+            padding: '5px 8px',
             color: '#a78bfa',
-            fontSize: '12px',
+            fontSize: '11px',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            gap: '6px',
+            gap: '4px',
           }}
         >
-          <MessageSquare size={14} />
+          <MessageSquare size={13} />
           <span>Notes</span>
         </button>
 
-        {/* Studio Theme Switcher */}
+        {/* Theme Switcher */}
         <button
           onClick={() => {
             const nextTheme = theme === 'obsidian' ? 'classic' : theme === 'classic' ? 'slate' : 'obsidian';
             onThemeChange(nextTheme);
           }}
-          title={`Active Theme: ${theme.toUpperCase()} (Click to toggle Obsidian / Classic Paper / Slate)`}
+          title={`Active Theme: ${theme.toUpperCase()}`}
           style={{
             backgroundColor: 'var(--bg-panel)',
             border: '1px solid var(--border-subtle)',
             borderRadius: '6px',
-            padding: '6px 10px',
+            padding: '5px 8px',
             color: 'var(--accent-gold)',
-            fontSize: '12px',
+            fontSize: '11px',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            gap: '6px',
+            gap: '4px',
           }}
         >
-          {theme === 'classic' ? <Sun size={14} /> : <Moon size={14} />}
+          {theme === 'classic' ? <Sun size={13} /> : <Moon size={13} />}
           <span style={{ textTransform: 'capitalize' }}>{theme}</span>
         </button>
 
@@ -535,16 +651,16 @@ export const ScriptTopBar: React.FC<ScriptTopBarProps> = ({
             backgroundColor: 'var(--bg-panel)',
             border: '1px solid var(--border-subtle)',
             borderRadius: '6px',
-            padding: '6px 10px',
+            padding: '5px 8px',
             color: 'var(--ink-primary)',
-            fontSize: '12px',
+            fontSize: '11px',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            gap: '6px',
+            gap: '4px',
           }}
         >
-          <Upload size={14} color="var(--accent-gold)" />
+          <Upload size={13} color="var(--accent-gold)" />
           <span>Import</span>
         </button>
 
@@ -555,16 +671,16 @@ export const ScriptTopBar: React.FC<ScriptTopBarProps> = ({
             backgroundColor: 'var(--bg-panel)',
             border: '1px solid var(--border-subtle)',
             borderRadius: '6px',
-            padding: '6px 10px',
+            padding: '5px 8px',
             color: 'var(--ink-primary)',
-            fontSize: '12px',
+            fontSize: '11px',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            gap: '6px',
+            gap: '4px',
           }}
         >
-          <FileText size={14} color="var(--accent-gold)" />
+          <FileText size={13} color="var(--accent-gold)" />
           <span>Fountain</span>
         </button>
 
@@ -575,16 +691,16 @@ export const ScriptTopBar: React.FC<ScriptTopBarProps> = ({
             backgroundColor: 'var(--bg-panel)',
             border: '1px solid var(--border-subtle)',
             borderRadius: '6px',
-            padding: '6px 10px',
+            padding: '5px 8px',
             color: 'var(--ink-primary)',
-            fontSize: '12px',
+            fontSize: '11px',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            gap: '6px',
+            gap: '4px',
           }}
         >
-          <FileText size={14} color="#38bdf8" />
+          <FileText size={13} color="#38bdf8" />
           <span>FDX</span>
         </button>
 
@@ -595,17 +711,17 @@ export const ScriptTopBar: React.FC<ScriptTopBarProps> = ({
             backgroundColor: 'var(--bg-panel)',
             border: '1px solid var(--border-subtle)',
             borderRadius: '6px',
-            padding: '6px 10px',
+            padding: '5px 8px',
             color: 'var(--ink-primary)',
-            fontSize: '12px',
+            fontSize: '11px',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            gap: '6px',
+            gap: '4px',
           }}
         >
-          <Download size={14} />
-          <span>Backup</span>
+          <Download size={13} />
+          <span>JSON</span>
         </button>
 
         <button
@@ -615,36 +731,36 @@ export const ScriptTopBar: React.FC<ScriptTopBarProps> = ({
             backgroundColor: 'var(--accent-amber)',
             border: 'none',
             borderRadius: '6px',
-            padding: '6px 12px',
+            padding: '5px 10px',
             color: '#000',
             fontWeight: 600,
-            fontSize: '12px',
+            fontSize: '11px',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            gap: '6px',
+            gap: '4px',
           }}
         >
-          <Printer size={14} />
-          <span>Print / PDF</span>
+          <Printer size={13} />
+          <span>Print</span>
         </button>
 
         <button
           onClick={onToggleCharacter}
-          title="Toggle Cast & Beats"
+          title="Toggle Cast & Beats Panel"
           style={{
             backgroundColor: characterOpen ? 'var(--bg-panel)' : 'transparent',
             border: '1px solid var(--border-subtle)',
             borderRadius: '6px',
-            padding: '6px',
+            padding: '5px',
             color: characterOpen ? 'var(--accent-gold)' : 'var(--ink-muted)',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            marginLeft: '4px',
+            marginLeft: '2px',
           }}
         >
-          <PanelRight size={16} />
+          <PanelRight size={15} />
         </button>
       </div>
     </header>
